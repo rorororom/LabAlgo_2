@@ -28,8 +28,8 @@ private:
 
 public:
   /**
-   * @brief Конструктор класса.
-   * @param n Количество элементов в последовательности.
+   * @brief Конструктор класса
+   * @param n Количество элементов в последовательности
    */
   AlternatingSequence(int n)
       : elementCount(n), sequence(n, 0), increasingLength(n, INCREASE),
@@ -68,7 +68,7 @@ public:
 
   /**
    * @brief Метод для нахождения и вывода самой длинной чередующейся
-   * последовательности.
+   * последовательности
    */
   void findAndPrintLongestSequence() {
     int lastIndex = DECREASE;
@@ -100,11 +100,6 @@ public:
   }
 };
 
-/**
- * @brief Точка входа в программу. Выполняет ввод данных и запускает расчет
- * чередующихся последовательностей.
- * @return Код завершения программы.
- */
 int main() {
   int elementCount;
 
