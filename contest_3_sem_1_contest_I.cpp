@@ -1,52 +1,23 @@
 #include <iostream>
 #include <vector>
 
-// Константы для обозначения переходов между убывающей и возрастающей
-// последовательностями
-const int DECREASE = -1;
-const int INCREASE = 1;
-
-/// Макрос для вычисления максимального значения между двумя аргументами
-#define MAX(a, b) ((a) >= (b)) ? (a) : (b)
-
 /**
- * @class AlternatingSequence
- * @brief Класс для работы с чередующейся последовательностью
+ * @class AlternatingSequenceCalculator
+ * @brief Класс для вычисления самой длинной чередующейся подпоследовательности
  */
-class AlternatingSequence {
-private:
-  int elementCount; // Количество элементов в последовательности
-  std::vector<int> sequence; // Входная последовательность
-  std::vector<int>
-      increasingLength; // Длины возрастающих подпоследовательностей
-  std::vector<int> decreasingLength; // Длины убывающих подпоследовательностей
-  std::vector<int> increasingPrevIndex; // Индексы предыдущих элементов
-                                        // возрастающей последовательности
-  std::vector<int> decreasingPrevIndex; // Индексы предыдущих элементов
-                                        // убывающей последовательности
-  std::vector<int> transitions; // Переходы: INCREASE или DECREASE
-
+class AlternatingSequenceCalculator {
 public:
   /**
    * @brief Конструктор класса
-   * @param n Количество элементов в последовательности
+   * @param seq Входная последовательность
    */
-  AlternatingSequence(int n)
-      : elementCount(n), sequence(n, 0), increasingLength(n, INCREASE),
-        decreasingLength(n, INCREASE), increasingPrevIndex(n, DECREASE),
-        decreasingPrevIndex(n, DECREASE), transitions(n, 0) {}
+  AlternatingSequenceCalculator(const std::vector<int>& seq)
+      : elementCount(seq.size()), sequence(seq), increasingLength(seq.size(), INCREASE),
+        decreasingLength(seq.size(), INCREASE), increasingPrevIndex(seq.size(), DECREASE),
+        decreasingPrevIndex(seq.size(), DECREASE), transitions(seq.size(), 0) {}
 
   /**
-   * @brief Метод для ввода последовательности чисел
-   */
-  void inputSequence() {
-    for (int i = 0; i < elementCount; i++) {
-      std::cin >> sequence[i];
-    }
-  }
-
-  /**
-   * @brief Метод для вычисления длин чередующихся подпоследовательностей
+   * @brief Метод для вычисления длины самой большой чередующейся подпоследовательности
    */
   void calculateLongestSequences() {
     for (int i = 1; i < elementCount; i++) {
@@ -67,15 +38,15 @@ public:
   }
 
   /**
-   * @brief Метод для нахождения и вывода самой длинной чередующейся
-   * последовательности
+   * @brief Метод для получения самой длинной чередующейся подпоследовательности
+   * @return Пара: длина и сама последовательность
    */
-  void findAndPrintLongestSequence() {
+  std::pair<int, std::vector<int> > getLongestSequence() {
     int lastIndex = DECREASE;
     int maxLength = 0;
 
     for (int i = 0; i < elementCount; i++) {
-      int currentLength = MAX(increasingLength[i], decreasingLength[i]);
+      int currentLength = std::max(increasingLength[i], decreasingLength[i]);
       if (maxLength < currentLength) {
         maxLength = currentLength;
         lastIndex = i;
@@ -92,23 +63,65 @@ public:
       }
     }
 
-    std::cout << maxLength << std::endl;
-    for (int i = maxLength - 1; i >= 0; i--) {
-      std::cout << longestSequence[i] << " ";
-    }
-    std::cout << std::endl;
+    std::reverse(longestSequence.begin(), longestSequence.end());
+    return {maxLength, longestSequence};
   }
+
+private:
+  const int DECREASE = -1; // Константы для обозначения переходов
+  const int INCREASE = 1;
+
+  int elementCount; // Количество элементов в последовательности
+  std::vector<int> sequence; // Входная последовательность
+  std::vector<int> increasingLength; // Длины возрастающих подпоследовательностей
+  std::vector<int> decreasingLength; // Длины убывающих подпоследовательностей
+  std::vector<int> increasingPrevIndex; // Индексы предыдущих элементов возрастающей последовательности
+  std::vector<int> decreasingPrevIndex; // Индексы предыдущих элементов убывающей последовательности
+  std::vector<int> transitions; // Переходы: INCREASE или DECREASE
 };
+
+//------------------------------------------------------------------//
+//------------------------------------------------------------------//
+
+/**
+ * @brief Функция для ввода последовательности
+ */
+std::vector<int> inputSequence(int count) {
+  std::vector<int> sequence(count);
+  for (int i = 0; i < count; ++i) {
+    std::cin >> sequence[i];
+  }
+  return sequence;
+}
+
+//------------------------------------------------------------------//
+//------------------------------------------------------------------//
+
+/**
+ * @brief Функция для вывода результата
+ */
+void printSequence(const std::pair<int, std::vector<int> >& result) {
+  std::cout << result.first << std::endl;
+  for (int num : result.second) {
+    std::cout << num << " ";
+  }
+  std::cout << std::endl;
+}
+
+//------------------------------------------------------------------//
+//------------------------------------------------------------------//
 
 int main() {
   int elementCount;
-
   std::cin >> elementCount;
-  AlternatingSequence sequenceTask(elementCount);
 
-  sequenceTask.inputSequence();
+  std::vector<int> sequence = inputSequence(elementCount);
+
+  AlternatingSequenceCalculator sequenceTask(sequence);
   sequenceTask.calculateLongestSequences();
-  sequenceTask.findAndPrintLongestSequence();
+  auto subsequence = sequenceTask.getLongestSequence();
+
+  printSequence(subsequence);
 
   return 0;
 }
