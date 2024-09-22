@@ -1,125 +1,126 @@
 #include <iostream>
 #include <vector>
 
-const int MODULE    = 1000003;
-const int CNT_JUMPS = 5;
-
 /**
- * @class MatrixExponentiation
- * @brief Класс для выполнения экспоненцирования матриц и для решения дпшки
+ * @class MatrixOperations
+ * @brief Класс для работы с матрицами - умножение и возведение в степень
  */
-class MatrixExponentiation {
+class MatrixOperations {
 private:
-  std::vector<int> initialSequence; // Начальная последовательность
-  std::vector<std::vector<unsigned long long>>
-      transformationMatrix; // Основная матрица преобразований
-  std::vector<std::vector<unsigned long long>>
-      resultMatrix; // Единичная матрица (в итоге результат)
-  unsigned long long numberOfSteps; // Количество шагов для вычислений
-
-  /**
-   * @brief Инициализация основной матрицы и единичной матрицы
-   */
-  void initializeMatrices() {
-    transformationMatrix = {{1, 1, 1, 1, 1},
-                            {1, 0, 0, 0, 0},
-                            {0, 1, 0, 0, 0},
-                            {0, 0, 1, 0, 0},
-                            {0, 0, 0, 1, 0}};
-
-    resultMatrix         = {{1, 0, 0, 0, 0},
-                            {0, 1, 0, 0, 0},
-                            {0, 0, 1, 0, 0},
-                            {0, 0, 0, 1, 0},
-                            {0, 0, 0, 0, 1}};
-  }
-
-  /**
-   * @brief Умножение двух матриц
-   * @param matrixA Первая матрица
-   * @param matrixB Вторая матрица
-   * @return Результат умножения матриц matrixA и matrixB
-   */
-  std::vector<std::vector<unsigned long long>> multiplyMatrices(
-      const std::vector<std::vector<unsigned long long>> &matrixA,
-      const std::vector<std::vector<unsigned long long>> &matrixB) {
-
-    std::vector<std::vector<unsigned long long>> productMatrix(
-        CNT_JUMPS, std::vector<unsigned long long>(CNT_JUMPS, 0));
-
-    for (int row = 0; row < CNT_JUMPS; ++row) {
-      for (int col = 0; col < CNT_JUMPS; ++col) {
-        for (int k = 0; k < CNT_JUMPS; ++k) {
-          productMatrix[row][col] =
-              (productMatrix[row][col] +
-               matrixA[row][k] * matrixB[k][col] % MODULE) %
-              MODULE;
-        }
-      }
-    }
-
-    return productMatrix;
-  }
-
-  /**
-   * @brief Возведение матрицы в степень
-   * @param power Степень возведения
-   */
-  void exponentiateMatrix(unsigned long long power) {
-    while (power > 0) {
-      if (power % 2 == 1) {
-        resultMatrix = multiplyMatrices(resultMatrix, transformationMatrix);
-      }
-      transformationMatrix =
-          multiplyMatrices(transformationMatrix, transformationMatrix);
-      power /= 2;
-    }
-  }
+    int size;
+    unsigned long long mod;
+    std::vector<std::vector<unsigned long long>> matrix;
 
 public:
-  /**
-   * @brief Конструктор для инициализации начальных значений и шагов
-   * @param steps Количество шагов для вычисления
-   */
-  MatrixExponentiation(unsigned long long steps)
-      : initialSequence({1, 1, 2, 4, 8}), numberOfSteps(steps - CNT_JUMPS) {
-    initializeMatrices();
-  }
-
-  /**
-   * @brief Основная функция для вычисления результата
-   * @return Результат вычисления дпшки
-   */
-  unsigned long long calculateResult() {
-    if (numberOfSteps + CNT_JUMPS <= CNT_JUMPS) {
-      return initialSequence[numberOfSteps + CNT_JUMPS - 1];
+    MatrixOperations(int n, unsigned long long module, bool identity = false) : size(n), mod(module) {
+        matrix.resize(size, std::vector<unsigned long long>(size, 0));
+        if (identity) {
+            for (int i = 0; i < size; ++i) {
+                matrix[i][i] = 1;
+            }
+        }
     }
 
-    exponentiateMatrix(numberOfSteps);
-
-    unsigned long long finalResult = 0;
-    for (size_t i = 0; i < CNT_JUMPS; i++) {
-      finalResult =
-          (finalResult +
-           resultMatrix[0][i] * initialSequence[CNT_JUMPS - i - 1] % MODULE) %
-          MODULE;
+    std::vector<unsigned long long>& operator[](int i) {
+        return matrix[i];
     }
 
-    return finalResult;
-  }
+    const std::vector<unsigned long long>& operator[](int i) const {
+        return matrix[i];
+    }
+
+    // Умножение матриц
+    MatrixOperations operator*(const MatrixOperations& other) const {
+        MatrixOperations product(size, mod);
+        for (int row = 0; row < size; ++row) {
+            for (int col = 0; col < size; ++col) {
+                for (int k = 0; k < size; ++k) {
+                    product[row][col] = (product[row][col] + matrix[row][k] * other[k][col]) % mod;
+                }
+            }
+        }
+        return product;
+    }
+
+    // Возведение матрицы в степень
+    MatrixOperations exponentiate(unsigned long long power) const {
+        MatrixOperations result(size, mod, true);  // Единичная матрица
+        MatrixOperations base = *this;
+        while (power > 0) {
+            if (power % 2 == 1) {
+                result = result * base;
+            }
+            base = base * base;
+            power /= 2;
+        }
+        return result;
+    }
+};
+
+/**
+ * @class MatrixSolver
+ * @brief Класс для решения задачи, находит ответ
+ */
+class MatrixSolver {
+private:
+    std::vector<int> initialSequence;
+    MatrixOperations transformationMatrix;
+    unsigned long long distance;
+    int cntJumps;
+    unsigned long long module;
+
+public:
+    /**
+     * @brief Конструктор с параметрами
+     * @param dist Дистанция
+     * @param jumps Количество состояний
+     * @param mod Модуль для вычислений
+     */
+    MatrixSolver(unsigned long long dist, int jumps = 5, unsigned long long mod = 1000003)
+        : distance(dist >= jumps ? dist - jumps : dist), cntJumps(jumps), module(mod), initialSequence({1, 1, 2, 4, 8}),
+          transformationMatrix(jumps, mod) {
+        initializeTransformationMatrix();
+    }
+
+private:
+    /**
+     * @brief Инициализация матрицы преобразований
+     */
+    void initializeTransformationMatrix() {
+        transformationMatrix[0] = {1, 1, 1, 1, 1};
+        transformationMatrix[1] = {1, 0, 0, 0, 0};
+        transformationMatrix[2] = {0, 1, 0, 0, 0};
+        transformationMatrix[3] = {0, 0, 1, 0, 0};
+        transformationMatrix[4] = {0, 0, 0, 1, 0};
+    }
+
+public:
+    /**
+     * @brief Основная функция для вычисления результата
+     * @return Результат вычисления задачи
+     */
+    unsigned long long calculateResult() {
+        if (distance < cntJumps) {
+            return initialSequence[distance];
+        }
+
+        MatrixOperations resultMatrix = transformationMatrix.exponentiate(distance);
+
+        unsigned long long finalResult = 0;
+        for (int i = 0; i < cntJumps; ++i) {
+            finalResult = (finalResult + resultMatrix[0][i] * initialSequence[cntJumps - i - 1]) % module;
+        }
+
+        return finalResult;
+    }
 };
 
 int main() {
-  unsigned long long steps;
-  std::cin >> steps;
+    unsigned long long distance;
+    std::cin >> distance;
 
-  if (steps == 0) {
-    std::cout << 1 << std::endl;
+    MatrixSolver solver(distance);
+    std::cout << solver.calculateResult() << std::endl;
+
     return 0;
-  }
-
-  MatrixExponentiation solver(steps);
-  std::cout << solver.calculateResult() << std::endl;
-
-  return 0;
 }
