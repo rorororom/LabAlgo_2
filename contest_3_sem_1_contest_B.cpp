@@ -6,11 +6,6 @@
  * @brief Класс для работы с матрицами (умножение и возведение в степень)
  */
 class MatrixOperations {
-private:
-  int size;
-  unsigned long long mod;
-  std::vector<std::vector<unsigned long long>> matrix;
-
 public:
   MatrixOperations(int n, unsigned long long module, bool identity = false)
       : size(n), mod(module) {
@@ -55,6 +50,11 @@ public:
     }
     return result;
   }
+
+private:
+  int size;
+  unsigned long long mod;
+  std::vector<std::vector<unsigned long long>> matrix;
 };
 
 /**
