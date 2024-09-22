@@ -3,7 +3,7 @@
 
 /**
  * @class MatrixOperations
- * @brief Класс для работы с матрицами - умножение и возведение в степень
+ * @brief Класс для работы с матрицами (умножение и возведение в степень)
  */
 class MatrixOperations {
 private:
