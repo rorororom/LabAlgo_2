@@ -4,6 +4,16 @@
 #include <tuple>
 
 /**
+ * @struct LcsResult
+ * @brief Структура для хранения результатов LCS
+ */
+struct LcsResult {
+  int length;                     // Длина наибольшей общей подпоследовательности
+  std::vector<int> str1Indexes;   // Индексы первой строки
+  std::vector<int> str2Indexes;   // Индексы второй строки
+};
+
+/**
  * @class LcsCalculator
  * @brief Класс для вычисления наибольшей общей подпоследовательности (LCS)
  */
@@ -15,15 +25,14 @@ public:
    * @param s2 Вторая строка
    */
   LcsCalculator(const std::string &s1, const std::string &s2)
-      : str1(s1), str2(s2) {
-    lcsTable.resize(str1.size() + 1, std::vector<int>(str2.size() + 1, 0));
-  }
+      : str1(s1), str2(s2),
+        lcsTable(str1.size() + 1, std::vector<int>(str2.size() + 1, 0)) {}
 
   /**
    * @brief Метод для вычисления и восстановления наибольшей общей подпоследовательности
    * @return Кортеж, содержащий длину LCS и индексы символов, входящих в LCS, для обеих строк
    */
-  std::tuple<int, std::vector<int>, std::vector<int>> calculate() {
+  LcsResult calculate() {
     computeLcsTable();
     auto [str1Indexes, str2Indexes] = reconstructLcs();
 
@@ -77,23 +86,24 @@ private:
 };
 
 /**
- * @brief Функция для вывода результатов LCS
- * @param length Длина наибольшей общей подпоследовательности
- * @param str1Indexes Индексы символов LCS в первой строке
- * @param str2Indexes Индексы символов LCS во второй строке
+ * @brief Универсальная функция для вывода вектора целых чисел
+ * @param vec Вектор целых чисел
  */
-void printLcsResult(int length, const std::vector<int>& str1Indexes, const std::vector<int>& str2Indexes) {
-  std::cout << length << std::endl;
-
-  for (int i = str1Indexes.size() - 1; i >= 0; --i) {
-    std::cout << str1Indexes[i] << " ";
+void printVector(const std::vector<int>& vec) {
+  for (int i = vec.size() - 1; i >= 0; --i) {
+    std::cout << vec[i] << " ";
   }
   std::cout << std::endl;
+}
 
-  for (int i = str2Indexes.size() - 1; i >= 0; --i) {
-    std::cout << str2Indexes[i] << " ";
-  }
-  std::cout << std::endl;
+/**
+ * @brief Функция для вывода результатов LCS
+ * @param result Результат работы алгоритма в виде структуры LcsResult
+ */
+void printLcsResult(const LcsResult& result) {
+  std::cout << result.length << std::endl;
+  printVector(result.str1Indexes);
+  printVector(result.str2Indexes);
 }
 
 int main() {
@@ -102,8 +112,8 @@ int main() {
 
   LcsCalculator lcsSolver(str1, str2);
 
-  auto [length, str1Indexes, str2Indexes] = lcsSolver.calculate();
-  printLcsResult(length, str1Indexes, str2Indexes);
+  LcsResult result = lcsSolver.calculate();
+  printLcsResult(result);
 
   return 0;
 }
