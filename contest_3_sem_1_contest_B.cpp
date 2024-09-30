@@ -2,35 +2,68 @@
 #include <vector>
 
 /**
- * @class MatrixOperations
- * @brief Класс для работы с матрицами (умножение и возведение в степень)
+ * @class ModArith
+ * @brief Класс для модульной арифметики
  */
-class MatrixOperations {
+template <unsigned long long MOD>
+class ModArith {
 public:
-  MatrixOperations(int n, unsigned long long module, bool identity = false)
-      : size(n), mod(module) {
-    matrix.resize(size, std::vector<unsigned long long>(size, 0));
-    if (identity) {
-      for (int i = 0; i < size; ++i) {
-        matrix[i][i] = 1;
-      }
+  ModArith() : value(0) {}
+  ModArith(unsigned long long v) : value(v % MOD) {}
+
+  ModArith operator+(const ModArith &other) const {
+    return ModArith((value + other.value) % MOD);
+  }
+
+  ModArith operator*(const ModArith &other) const {
+    return ModArith((value * other.value) % MOD);
+  }
+
+  ModArith &operator+=(const ModArith &other) {
+    value = (value + other.value) % MOD;
+    return *this;
+  }
+
+  ModArith &operator*=(const ModArith &other) {
+    value = (value * other.value) % MOD;
+    return *this;
+  }
+
+  unsigned long long getValue() const { return value; }
+
+private:
+  unsigned long long value;
+};
+
+/**
+ * @class Matrix
+ * @brief Класс для работы с матрицами произвольного типа данных
+ */
+template <typename T>
+class Matrix {
+public:
+  Matrix(int n) : size(n) {
+    matrix.resize(size, std::vector<T>(size, 0));
+  }
+
+  static Matrix<T> createIdentityMatrix(int n) {
+    Matrix<T> identityMatrix(n);
+    for (int i = 0; i < n; ++i) {
+      identityMatrix[i][i] = 1;
     }
+    return identityMatrix;
   }
 
-  std::vector<unsigned long long> &operator[](int i) { return matrix[i]; }
-
-  const std::vector<unsigned long long> &operator[](int i) const {
-    return matrix[i];
-  }
+  std::vector<T> &operator[](int i) { return matrix[i]; }
+  const std::vector<T> &operator[](int i) const { return matrix[i]; }
 
   // Умножение матриц
-  MatrixOperations operator*(const MatrixOperations &other) const {
-    MatrixOperations product(size, mod);
+  Matrix<T> operator*(const Matrix<T> &other) const {
+    Matrix<T> product(size);
     for (int row = 0; row < size; ++row) {
       for (int col = 0; col < size; ++col) {
         for (int k = 0; k < size; ++k) {
-          product[row][col] =
-              (product[row][col] + matrix[row][k] * other[k][col]) % mod;
+          product[row][col] += matrix[row][k] * other[k][col];
         }
       }
     }
@@ -38,9 +71,9 @@ public:
   }
 
   // Возведение матрицы в степень
-  MatrixOperations exponentiate(unsigned long long power) const {
-    MatrixOperations result(size, mod, true); // Единичная матрица
-    MatrixOperations base = *this;
+  Matrix<T> exponentiate(unsigned long long power) const {
+    Matrix<T> result = Matrix<T>::createIdentityMatrix(size);
+    Matrix<T> base = *this;
     while (power > 0) {
       if (power % 2 == 1) {
         result = result * base;
@@ -53,47 +86,32 @@ public:
 
 private:
   int size;
-  unsigned long long mod;
-  std::vector<std::vector<unsigned long long>> matrix;
+  std::vector<std::vector<T>> matrix;
 };
 
 /**
- * @class MatrixSolver
- * @brief Класс для решения задачи, находит ответ
+ * @class MatrixExponentiationSolver
+ * @brief Класс для решения задачи с возведением матрицы в степень
  */
-class MatrixSolver {
+template <typename T>
+class MatrixExponentiationSolver {
 public:
-  /**
-   * @brief Конструктор с параметрами
-   * @param dist Дистанция
-   * @param jumps Количество состояний
-   * @param mod Модуль для вычислений
-   */
-  MatrixSolver(unsigned long long dist, int jumps = 5,
-               unsigned long long mod = 1000003)
+  MatrixExponentiationSolver(unsigned long long dist, int jumps = 5)
       : distance(dist >= jumps ? dist - jumps : dist), cntJumps(jumps),
-        module(mod), initialSequence({1, 1, 2, 4, 8}),
-        transformationMatrix(jumps, mod) {
+        initialSequence({1, 1, 2, 4, 8}), transformationMatrix(jumps) {
     initializeTransformationMatrix();
   }
 
-public:
-  /**
-   * @brief Основная функция для вычисления результата
-   * @return Результат вычисления задачи
-   */
   unsigned long long calculateResult() {
     if (distance < cntJumps) {
       return initialSequence[distance];
     }
 
-    MatrixOperations resultMatrix = transformationMatrix.exponentiate(distance);
+    Matrix<T> resultMatrix = transformationMatrix.exponentiate(distance);
 
     unsigned long long finalResult = 0;
     for (int i = 0; i < cntJumps; ++i) {
-      finalResult = (finalResult +
-                     resultMatrix[0][i] * initialSequence[cntJumps - i - 1]) %
-                    module;
+      finalResult += resultMatrix[0][i].getValue() * initialSequence[cntJumps - i - 1];
     }
 
     return finalResult;
@@ -101,14 +119,10 @@ public:
 
 private:
   std::vector<int> initialSequence;
-  MatrixOperations transformationMatrix;
+  Matrix<T> transformationMatrix;
   unsigned long long distance;
   int cntJumps;
-  unsigned long long module;
 
-    /**
-   * @brief Инициализация матрицы преобразований
-   */
   void initializeTransformationMatrix() {
     transformationMatrix[0] = {1, 1, 1, 1, 1};
     transformationMatrix[1] = {1, 0, 0, 0, 0};
@@ -116,14 +130,13 @@ private:
     transformationMatrix[3] = {0, 0, 1, 0, 0};
     transformationMatrix[4] = {0, 0, 0, 1, 0};
   }
-
 };
 
 int main() {
   unsigned long long distance;
   std::cin >> distance;
 
-  MatrixSolver solver(distance);
+  MatrixExponentiationSolver<ModArith<1000003>> solver(distance);
   std::cout << solver.calculateResult() << std::endl;
 
   return 0;
