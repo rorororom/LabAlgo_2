@@ -1,15 +1,16 @@
 #include <iostream>
 #include <vector>
+#include <cstdint>  
 
 /**
  * @class ModArith
  * @brief Класс для модульной арифметики
  */
-template <unsigned long long MOD>
+template <uint32_t MOD>
 class ModArith {
 public:
   ModArith() : value(0) {}
-  ModArith(unsigned long long v) : value(v % MOD) {}
+  ModArith(uint64_t v) : value(v % MOD) {}
 
   ModArith operator+(const ModArith &other) const {
     return ModArith((value + other.value) % MOD);
@@ -29,10 +30,10 @@ public:
     return *this;
   }
 
-  unsigned long long getValue() const { return value; }
+  uint32_t getValue() const { return value; }
 
 private:
-  unsigned long long value;
+  uint32_t value;
 };
 
 /**
@@ -57,7 +58,6 @@ public:
   std::vector<T> &operator[](int i) { return matrix[i]; }
   const std::vector<T> &operator[](int i) const { return matrix[i]; }
 
-  // Умножение матриц
   Matrix<T> operator*(const Matrix<T> &other) const {
     Matrix<T> product(size);
     for (int row = 0; row < size; ++row) {
@@ -70,8 +70,7 @@ public:
     return product;
   }
 
-  // Возведение матрицы в степень
-  Matrix<T> exponentiate(unsigned long long power) const {
+  Matrix<T> exponentiate(uint64_t power) const {
     Matrix<T> result = Matrix<T>::createIdentityMatrix(size);
     Matrix<T> base = *this;
     while (power > 0) {
@@ -90,28 +89,29 @@ private:
 };
 
 /**
- * @class MatrixExponentiationSolver
- * @brief Класс для решения задачи с возведением матрицы в степень
+ * @class WayCntCalculator
+ * @brief Класс для вычисления количества способов при помощи матричного возведения в степень
  */
 template <typename T>
-class MatrixExponentiationSolver {
+class WayCntCalculator {
 public:
-  MatrixExponentiationSolver(unsigned long long dist, int jumps = 5)
+  WayCntCalculator(uint64_t dist, int jumps = 5)
       : distance(dist >= jumps ? dist - jumps : dist), cntJumps(jumps),
         initialSequence({1, 1, 2, 4, 8}), transformationMatrix(jumps) {
     initializeTransformationMatrix();
   }
 
-  unsigned long long calculateResult() {
+  uint64_t calculateResult() {
     if (distance < cntJumps) {
       return initialSequence[distance];
     }
 
     Matrix<T> resultMatrix = transformationMatrix.exponentiate(distance);
 
-    unsigned long long finalResult = 0;
+    uint64_t finalResult = 0;
     for (int i = 0; i < cntJumps; ++i) {
       finalResult += resultMatrix[0][i].getValue() * initialSequence[cntJumps - i - 1];
+      finalResult %= MOD;
     }
 
     return finalResult;
@@ -120,8 +120,10 @@ public:
 private:
   std::vector<int> initialSequence;
   Matrix<T> transformationMatrix;
-  unsigned long long distance;
+  uint64_t distance;
   int cntJumps;
+
+  static const uint32_t MOD = 1000003; 
 
   void initializeTransformationMatrix() {
     transformationMatrix[0] = {1, 1, 1, 1, 1};
@@ -133,10 +135,10 @@ private:
 };
 
 int main() {
-  unsigned long long distance;
+  uint64_t distance;
   std::cin >> distance;
 
-  MatrixExponentiationSolver<ModArith<1000003>> solver(distance);
+  WayCntCalculator<ModArith<1000003>> solver(distance);
   std::cout << solver.calculateResult() << std::endl;
 
   return 0;
