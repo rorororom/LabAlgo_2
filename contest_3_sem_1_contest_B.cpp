@@ -2,31 +2,33 @@
 #include <vector>
 #include <cstdint>  
 
+const uint32_t MOD = 1000003;
+
 /**
  * @class ModArith
  * @brief Класс для модульной арифметики
  */
-template <uint32_t MOD>
+template <int32_t MOD>
 class ModArith {
 public:
   ModArith() : value(0) {}
-  ModArith(uint64_t v) : value(v % MOD) {}
+  ModArith(uint64_t v) : value(static_cast<uint32_t>(v % MOD)) {}
 
   ModArith operator+(const ModArith &other) const {
-    return ModArith((value + other.value) % MOD);
+    return ModArith((static_cast<uint64_t>(value) + other.value) % MOD);
   }
 
   ModArith operator*(const ModArith &other) const {
-    return ModArith((value * other.value) % MOD);
+    return ModArith((static_cast<uint64_t>(value) * other.value) % MOD);
   }
 
   ModArith &operator+=(const ModArith &other) {
-    value = (value + other.value) % MOD;
+    value = static_cast<uint32_t>((static_cast<uint64_t>(value) + other.value) % MOD);
     return *this;
   }
 
   ModArith &operator*=(const ModArith &other) {
-    value = (value * other.value) % MOD;
+    value = static_cast<uint32_t>((static_cast<uint64_t>(value) * other.value) % MOD);
     return *this;
   }
 
@@ -43,9 +45,7 @@ private:
 template <typename T>
 class Matrix {
 public:
-  Matrix(int n) : size(n) {
-    matrix.resize(size, std::vector<T>(size, 0));
-  }
+  Matrix(int n) { matrix.resize(n, std::vector<T>(n, 0)); }
 
   static Matrix<T> createIdentityMatrix(int n) {
     Matrix<T> identityMatrix(n);
@@ -59,10 +59,11 @@ public:
   const std::vector<T> &operator[](int i) const { return matrix[i]; }
 
   Matrix<T> operator*(const Matrix<T> &other) const {
-    Matrix<T> product(size);
-    for (int row = 0; row < size; ++row) {
-      for (int col = 0; col < size; ++col) {
-        for (int k = 0; k < size; ++k) {
+    int n = matrix.size();
+    Matrix<T> product(n);
+    for (int row = 0; row < n; ++row) {
+      for (int col = 0; col < n; ++col) {
+        for (int k = 0; k < n; ++k) {
           product[row][col] += matrix[row][k] * other[k][col];
         }
       }
@@ -71,7 +72,7 @@ public:
   }
 
   Matrix<T> exponentiate(uint64_t power) const {
-    Matrix<T> result = Matrix<T>::createIdentityMatrix(size);
+    Matrix<T> result = Matrix<T>::createIdentityMatrix(matrix.size());
     Matrix<T> base = *this;
     while (power > 0) {
       if (power % 2 == 1) {
@@ -84,7 +85,6 @@ public:
   }
 
 private:
-  int size;
   std::vector<std::vector<T>> matrix;
 };
 
@@ -123,8 +123,6 @@ private:
   uint64_t distance;
   int cntJumps;
 
-  static const uint32_t MOD = 1000003; 
-
   void initializeTransformationMatrix() {
     transformationMatrix[0] = {1, 1, 1, 1, 1};
     transformationMatrix[1] = {1, 0, 0, 0, 0};
@@ -138,7 +136,7 @@ int main() {
   uint64_t distance;
   std::cin >> distance;
 
-  WayCntCalculator<ModArith<1000003>> solver(distance);
+  WayCntCalculator<ModArith<MOD>> solver(distance);
   std::cout << solver.calculateResult() << std::endl;
 
   return 0;
