@@ -591,7 +591,7 @@ std::vector<std::vector<BigInt>> exp(
 
 class Solver {
  public:
-  void solve(const BigInt& n, int m, int mod) {
+  void ComputeResult(const BigInt& n, int m, int mod) {
     BigInt one(1);
     BigInt two(2);
 
@@ -599,88 +599,91 @@ class Solver {
       std::cout << (1LL << m) % mod << std::endl;
     } else {
       long long size = (1LL << m);
-      std::vector<std::vector<long long>> matrix(
-          size, std::vector<long long>(size, 0));
+      std::vector<std::vector<long long>> matrix(size, std::vector<long long>(size, 0));
+
       for (int mask = 0; mask < size; ++mask) {
-        for (int prevMask = 0; prevMask < size; ++prevMask) {
-          if (!findSquare(mask, prevMask, m)) {
-            matrix[mask][prevMask] = 1;
+        for (int prev_mask = 0; prev_mask < size; ++prev_mask) {
+          if (!IsSquare(mask, prev_mask, m)) {
+            matrix[mask][prev_mask] = 1;
           }
         }
       }
 
-      auto ansMatrix = exp(matrix, n - one, size, mod);
-      long long ans = 0;
+      auto result_matrix = Exponentiate(matrix, n - one, size, mod);
+      long long result = 0;
+
       for (int i = 0; i < size; ++i) {
         for (int j = 0; j < size; ++j) {
-          ans = (ans + ansMatrix[i][j]) % mod;
+          result = (result + result_matrix[i][j]) % mod;
         }
       }
-      std::cout << ans << std::endl;
+
+      std::cout << result << std::endl;
     }
   }
 
  private:
-  std::vector<std::vector<long long>> exp(
+  std::vector<std::vector<long long>> Exponentiate(
       const std::vector<std::vector<long long>>& matrix, const BigInt& n,
-      long long len, int mod) {
+      long long size, int mod) {
     if (n == BigInt(1)) {
       return matrix;
     }
+
     if (n % BigInt(2) == BigInt(0)) {
-      auto sqrt = exp(matrix, n / BigInt(2), len, mod);
-      return multiply(sqrt, sqrt, len, mod);
+      auto half_matrix = Exponentiate(matrix, n / BigInt(2), size, mod);
+      return Multiply(half_matrix, half_matrix, size, mod);
     }
-    return multiply(exp(matrix, n - BigInt(1), len, mod), matrix, len, mod);
+
+    return Multiply(Exponentiate(matrix, n - BigInt(1), size, mod), matrix, size, mod);
   }
 
-  std::vector<std::vector<long long>> multiply(
-      const std::vector<std::vector<long long>>& firstMatrix,
-      const std::vector<std::vector<long long>>& secondMatrix, long long len,
+  std::vector<std::vector<long long>> Multiply(
+      const std::vector<std::vector<long long>>& matrix_a,
+      const std::vector<std::vector<long long>>& matrix_b, long long size,
       int mod) {
-    std::vector<std::vector<long long>> res(len,
-                                            std::vector<long long>(len, 0));
-    for (long long i = 0; i < len; i++) {
-      for (long long j = 0; j < len; j++) {
-        for (long long k = 0; k < len; k++) {
-          res[i][j] =
-              (res[i][j] + firstMatrix[i][k] * secondMatrix[k][j]) % mod;
+    std::vector<std::vector<long long>> result(size, std::vector<long long>(size, 0));
+
+    for (long long i = 0; i < size; ++i) {
+      for (long long j = 0; j < size; ++j) {
+        for (long long k = 0; k < size; ++k) {
+          result[i][j] = (result[i][j] + matrix_a[i][k] * matrix_b[k][j]) % mod;
         }
       }
     }
-    return res;
+
+    return result;
   }
 
-  bool findSquare(int firstMask, int secondMask, int len) {
-    for (int i = 1; i < len; i++) {
-      int curFirstBit = (firstMask >> i) & 1;
-      int prevFirstBit = (firstMask >> (i - 1)) & 1;
-      if (curFirstBit == prevFirstBit) {
-        int curSecondBit = (secondMask >> i) & 1;
-        int prevSecondBit = (secondMask >> (i - 1)) & 1;
-        if (curFirstBit == curSecondBit && prevFirstBit == prevSecondBit) {
+  bool IsSquare(int mask_a, int mask_b, int length) {
+    for (int i = 1; i < length; ++i) {
+      int current_bit_a = (mask_a >> i) & 1;
+      int previous_bit_a = (mask_a >> (i - 1)) & 1;
+
+      if (current_bit_a == previous_bit_a) {
+        int current_bit_b = (mask_b >> i) & 1;
+        int previous_bit_b = (mask_b >> (i - 1)) & 1;
+
+        if (current_bit_a == current_bit_b && previous_bit_a == previous_bit_b) {
           return true;
         }
       }
     }
+
     return false;
   }
 };
 
-void getInput(BigInt& n, int& m, int& mod) {
+void GetInput(BigInt& n, int& m, int& mod) {
   std::cin >> n;
   std::cin >> m >> mod;
-}
-
-void processInputAndSolve(Solver& solver, const BigInt& n, int m, int mod) {
-  solver.solve(n, m, mod);
 }
 
 int main() {
   Solver solver;
   BigInt n;
   int m, mod;
-  getInput(n, m, mod);
-  processInputAndSolve(solver, n, m, mod);
+  GetInput(n, m, mod);
+  solver.ComputeResult(n, m, mod);
   return 0;
 }
